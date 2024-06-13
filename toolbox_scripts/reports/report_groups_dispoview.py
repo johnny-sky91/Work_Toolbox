@@ -1,10 +1,9 @@
 import os, datetime
 
 import pandas as pd
-import openpyxl.utils
 
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, NamedStyle, Font, Border, Side
+from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import CellIsRule
 from toolbox_scripts.read.read_dispoview_data import DispoviewDataReader
 
@@ -75,36 +74,39 @@ class GroupsDispoview:
             self.ready_groups[["CODENUMBER", "GROUP", "GROUP_DESCRIPTION"]],
             self.raw_dispoview,
             on="CODENUMBER",
-            how="left",
+            how="right",
         )
         self.weeks = list(self.all_merged_data.columns[4:])
 
     def _formula_column(self, row, first: bool):
-        if row["DATA"] == "Forecast_confirmed":
-            if first:
-                part_a = f'_xlfn.SUMIFS(All_data!E:E,All_data!$B:$B,$A{row.name +2},All_data!$D:$D,"Stock")'
-                sub_part_a = f"E$1"
-                sub_part_b = f"All_data!E:E"
-            else:
-                part_a = f"E{row.name +2}"
-                sub_part_a = f"F$1"
-                sub_part_b = f"All_data!F:F"
-            part_b = f'_xlfn.SUMIFS({sub_part_b},All_data!$B:$B,$A{row.name +2},All_data!$D:$D,"NetForecast")'
-            part_c = f"_xlfn.SUMIFS(Supply_confirmed!$E:$E,Supply_confirmed!$A:$A,$A{row.name +2},Supply_confirmed!$D:$D,{sub_part_a})"
-            return f"={part_a}-{part_b}+{part_c}"
+        row_index = row.name + 2
 
-        if row["DATA"] == "Orders_confirmed":
-            if first:
-                part_a = f'_xlfn.SUMIFS(All_data!E:E,All_data!$B:$B,$A{row.name +2},All_data!$D:$D,"Stock")'
-                sub_part_a = f"E$1"
-                sub_part_b = f"All_data!E:E"
-            else:
-                part_a = f"E{row.name +2}"
-                sub_part_a = f"F$1"
-                sub_part_b = f"All_data!F:F"
-            part_b = f'_xlfn.SUMIFS({sub_part_b},All_data!$B:$B,$A{row.name +2},All_data!$D:$D,"CustOrders")'
-            part_c = f"_xlfn.SUMIFS(Supply_confirmed!$E:$E,Supply_confirmed!$A:$A,$A{row.name +2},Supply_confirmed!$D:$D,{sub_part_a})"
-            return f"={part_a}-{part_b}+{part_c}"
+        if first:
+            stock = f'_xlfn.SUMIFS(All_data!E:E,All_data!$B:$B,$A{row_index},All_data!$D:$D,"Stock")'
+            supply_column = f"E$1"
+            data_column = f"All_data!E:E"
+        else:
+            stock = f"E{row_index}"
+            supply_column = f"F$1"
+            data_column = f"All_data!F:F"
+        net_forecast = f'_xlfn.SUMIFS({data_column},All_data!$B:$B,$A{row_index},All_data!$D:$D,"NetForecast")'
+        cust_orders = f'_xlfn.SUMIFS({data_column},All_data!$B:$B,$A{row_index},All_data!$D:$D,"CustOrders")'
+
+        supply_status = None
+        if row["DATA"] in ["Forecast_confirmed", "Forecast_requested"]:
+            supply_status = (
+                f"Supply_confirmed"
+                if row["DATA"] == "Forecast_confirmed"
+                else f"Supply_requested"
+            )
+            supply = f"_xlfn.SUMIFS({supply_status}!$E:$E,{supply_status}!$A:$A,$A{row_index},{supply_status}!$D:$D,{supply_column})"
+            return f"={stock}+{supply}-({net_forecast}+{cust_orders})"
+
+        elif row["DATA"] == "Orders_confirmed":
+            supply = f"_xlfn.SUMIFS(Supply_confirmed!$E:$E,Supply_confirmed!$A:$A,$A{row_index},Supply_confirmed!$D:$D,{supply_column})"
+            return f"={stock}+{supply}-{cust_orders}"
+
+        return None
 
     def _create_groups_balances(self):
         main_headers = ["GROUP", "GROUP_DESCRIPTION", "DATA", "COMMENTS"] + self.weeks
@@ -171,7 +173,7 @@ class GroupsDispoview:
         self.supply_confirmed.to_excel(
             writer, sheet_name=f"Supply_confirmed", index=False
         )
-        self.supply_confirmed.to_excel(
+        self.supply_requested.to_excel(
             writer, sheet_name=f"Supply_requested", index=False
         )
         self.raw_groups.to_excel(writer, sheet_name=f"Groups", index=False)
