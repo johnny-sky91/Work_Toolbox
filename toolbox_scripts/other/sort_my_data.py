@@ -5,7 +5,7 @@ def sort_my_data(directory):
     dir_mapping = {
         "sap_log_data_": "Downloads\sap_dispoview",
         "Report_dispoview_groups_": "Results\Dispoview_groups",
-        "EMS_Forecast_": "Results\EMS_forecast",
+        "EMS_forecast_": "Results\EMS_forecast",
     }
     files = os.listdir(directory)
     for file in files:
