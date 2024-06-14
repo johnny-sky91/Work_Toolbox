@@ -1,9 +1,9 @@
-import os
+import os, pyperclip, traceback
 import tkinter as tk
-from tkinter import BooleanVar, filedialog, messagebox
-import pyperclip
-import traceback
+
+from tkinter import filedialog, messagebox
 from dotenv import load_dotenv
+
 from toolbox_scripts.read.read_supply_data import SupplyDataReader
 from toolbox_scripts.reports.report_groups_dispoview import GroupsDispoview
 from toolbox_scripts.reports.report_alloaction_data import AllocationData
@@ -12,7 +12,6 @@ from toolbox_scripts.other.create_pos import create_csv_pos
 
 load_dotenv()
 
-# Loading environment variables
 paths, po_data, passwords = {}, {}, {}
 for key, value in os.environ.items():
     if key.startswith("PATH_"):
@@ -41,7 +40,7 @@ class Application(tk.Tk):
         self.passwords_widgets()
 
     def labels_widgets(self):
-        labels_list = ["Select", "", "Files", "Reports", "", "Others", "Passwords"]
+        labels_list = ["Select", "Files", "Reports", "Others", "Passwords"]
         for index, label in enumerate(labels_list):
             label_widget = tk.Label(self, text=label, font=("bold", 14))
             label_widget.grid(row=0, column=index, padx=5, pady=5)
@@ -64,7 +63,7 @@ class Application(tk.Tk):
         entries_list = ["dispoview_data", "supply_data", "all_dram_data"]
         for index, entry_name in enumerate(entries_list):
             entry = tk.Entry(self, name=entry_name, width=40)
-            entry.grid(row=index + 1, column=2, padx=5, pady=5)
+            entry.grid(row=index + 1, column=1, padx=5, pady=5)
             self.entries[entry_name] = entry
 
     def reports_widgets(self):
@@ -85,9 +84,7 @@ class Application(tk.Tk):
         }
         for index, (key, value) in enumerate(reports_data.items()):
             bt = tk.Button(self, text=key, command=value, width=20)
-            bt.grid(row=index + 1, column=3, padx=5, pady=5)
-            bt2 = tk.Button(self, text="?")
-            bt2.grid(row=index + 1, column=4, padx=5, pady=5)
+            bt.grid(row=index + 1, column=2, padx=5, pady=5)
 
     def others_widgets(self):
         others_data = {
@@ -114,7 +111,7 @@ class Application(tk.Tk):
         }
         for index, (key, value) in enumerate(others_data.items()):
             bt = tk.Button(self, text=key, command=value, width=20)
-            bt.grid(row=index + 1, column=5, padx=5, pady=5)
+            bt.grid(row=index + 1, column=3, padx=5, pady=5)
 
     def passwords_widgets(self):
         for index, (key, value) in enumerate(passwords.items()):
@@ -124,7 +121,7 @@ class Application(tk.Tk):
                 width=20,
                 command=lambda pssw=value: pyperclip.copy(pssw),
             )
-            pass_bt.grid(row=index + 1, column=6, padx=5, pady=5)
+            pass_bt.grid(row=index + 1, column=4, padx=5, pady=5)
 
     def select_path(self, path_name):
         path = filedialog.askopenfilename()
