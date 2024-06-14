@@ -1,21 +1,20 @@
+import os
 import tkinter as tk
-import os, pyperclip
-
+from tkinter import BooleanVar, filedialog, messagebox
+import pyperclip
+import traceback
 from dotenv import load_dotenv
-from tkinter import filedialog
-
 from toolbox_scripts.read.read_supply_data import SupplyDataReader
-
 from toolbox_scripts.reports.report_groups_dispoview import GroupsDispoview
 from toolbox_scripts.reports.report_alloaction_data import AllocationData
-
 from toolbox_scripts.other.sort_my_data import sort_my_data
 from toolbox_scripts.other.create_pos import create_csv_pos
 
 load_dotenv()
 
+# Loading environment variables
 paths, po_data, passwords = {}, {}, {}
-for index, (key, value) in enumerate(os.environ.items()):
+for key, value in os.environ.items():
     if key.startswith("PATH_"):
         paths[key] = value
     elif key.startswith("PO_"):
@@ -32,6 +31,7 @@ class Application(tk.Tk):
         self.call("set_theme", "dark")
 
         self.entries = {}
+        self.check_vars = {}
 
         self.labels_widgets()
         self.select_widgets()
@@ -41,77 +41,90 @@ class Application(tk.Tk):
         self.passwords_widgets()
 
     def labels_widgets(self):
-        labels_list = ["Select", "Files", "Reports", "Others", "Passwords"]
+        labels_list = ["Select", "", "Files", "Reports", "", "Others", "Passwords"]
         for index, label in enumerate(labels_list):
-            self.label = tk.Label(self, text=label, font=("bold", 14))
-            self.label.grid(row=0, column=index, padx=5, pady=5)
-
-    def entry_widgets(self):
-        entries_list = ["dispoview_data", "supply_data", "all_dram_data"]
-        for index, entry_name in enumerate(entries_list):
-            self.entry = tk.Entry(self, name=entry_name, width=40)
-            self.entry.grid(row=index + 1, column=1, padx=5, pady=5)
-            self.entries[entry_name] = self.entry
+            label_widget = tk.Label(self, text=label, font=("bold", 14))
+            label_widget.grid(row=0, column=index, padx=5, pady=5)
 
     def select_widgets(self):
         select_data = {
-            "Dispoview_data": lambda path_name=f"dispoview_data": self.select_path(
+            "Dispoview_data": lambda path_name="dispoview_data": self.select_path(
                 path_name
             ),
-            "Supply_data": lambda path_name=f"supply_data": self.select_path(path_name),
-            "All_dram_data": lambda path_name=f"all_dram_data": self.select_path(
+            "Supply_data": lambda path_name="supply_data": self.select_path(path_name),
+            "All_dram_data": lambda path_name="all_dram_data": self.select_path(
                 path_name
             ),
         }
         for index, (key, value) in enumerate(select_data.items()):
-            self.bt = tk.Button(self, text=key, command=value, width=20)
-            self.bt.grid(row=index + 1, column=0, padx=5, pady=5)
+            bt = tk.Button(self, text=key, command=value, width=20)
+            bt.grid(row=index + 1, column=0, padx=5, pady=5)
+
+    def entry_widgets(self):
+        entries_list = ["dispoview_data", "supply_data", "all_dram_data"]
+        for index, entry_name in enumerate(entries_list):
+            entry = tk.Entry(self, name=entry_name, width=40)
+            entry.grid(row=index + 1, column=2, padx=5, pady=5)
+            self.entries[entry_name] = entry
 
     def reports_widgets(self):
         reports_data = {
-            "Dispoview_groups": lambda: GroupsDispoview(
-                dispo_file_path=self.entries["dispoview_data"].get(),
-                groups_file_path=paths["PATH_DISPO_GROUPS"],
-                supply_file_path=self.entries["supply_data"].get(),
-            )(),
-            "Allocation_data": lambda: AllocationData(
-                dispo_file_path=self.entry_dispo.get(),
-                groups_file_path=paths["PATH_DISPO_GROUPS"],
-            )(),
+            "Dispoview_groups": self.run_with_error_handling(
+                lambda: GroupsDispoview(
+                    dispo_file_path=self.entries["dispoview_data"].get(),
+                    groups_file_path=paths["PATH_DISPO_GROUPS"],
+                    supply_file_path=self.entries["supply_data"].get(),
+                )()
+            ),
+            "Allocation_data": self.run_with_error_handling(
+                lambda: AllocationData(
+                    dispo_file_path=self.entries["dispoview_data"].get(),
+                    groups_file_path=paths["PATH_DISPO_GROUPS"],
+                )()
+            ),
         }
         for index, (key, value) in enumerate(reports_data.items()):
-            self.bt = tk.Button(self, text=key, command=value, width=20)
-            self.bt.grid(row=index + 1, column=2, padx=5, pady=5)
+            bt = tk.Button(self, text=key, command=value, width=20)
+            bt.grid(row=index + 1, column=3, padx=5, pady=5)
+            bt2 = tk.Button(self, text="?")
+            bt2.grid(row=index + 1, column=4, padx=5, pady=5)
 
     def others_widgets(self):
         others_data = {
-            "Create_POs": lambda: create_csv_pos(
-                path_excel_dat=paths["PATH_PO_TEMPLATE"],
-                ccn=po_data["PO_CCN"],
-                mas_loc=po_data["PO_MAS_LOC"],
-                request_div=po_data["PO_REQUEST_DIV"],
-                pur_loc=po_data["PO_PUR_LOC"],
-                delivery=po_data["PO_DELIVERY"],
-                inspection=po_data["PO_INSPECTION"],
+            "Create_POs": self.run_with_error_handling(
+                lambda: create_csv_pos(
+                    path_excel_dat=paths["PATH_PO_TEMPLATE"],
+                    ccn=po_data["PO_CCN"],
+                    mas_loc=po_data["PO_MAS_LOC"],
+                    request_div=po_data["PO_REQUEST_DIV"],
+                    pur_loc=po_data["PO_PUR_LOC"],
+                    delivery=po_data["PO_DELIVERY"],
+                    inspection=po_data["PO_INSPECTION"],
+                )
             ),
-            "Sort_My_Data": lambda: sort_my_data(paths["PATH_MY_DATA"]),
-            "New_supply_info": lambda: SupplyDataReader(
-                path_supply=self.entry_all_dram.get(), path_groups=paths["PATH_GROUPS"]
-            )(),
+            "New_supply_info": self.run_with_error_handling(
+                lambda: SupplyDataReader(
+                    path_supply=self.entries["all_dram_data"].get(),
+                    path_groups=paths["PATH_GROUPS"],
+                )()
+            ),
+            "Sort_My_Data": self.run_with_error_handling(
+                lambda: sort_my_data(paths["PATH_MY_DATA"])
+            ),
         }
         for index, (key, value) in enumerate(others_data.items()):
-            self.bt = tk.Button(self, text=key, command=value, width=20)
-            self.bt.grid(row=index + 1, column=3, padx=5, pady=5)
+            bt = tk.Button(self, text=key, command=value, width=20)
+            bt.grid(row=index + 1, column=5, padx=5, pady=5)
 
     def passwords_widgets(self):
         for index, (key, value) in enumerate(passwords.items()):
-            self.pass_bt = tk.Button(
+            pass_bt = tk.Button(
                 self,
                 text=key,
                 width=20,
                 command=lambda pssw=value: pyperclip.copy(pssw),
             )
-            self.pass_bt.grid(row=index + 1, column=4, padx=5, pady=5)
+            pass_bt.grid(row=index + 1, column=6, padx=5, pady=5)
 
     def select_path(self, path_name):
         path = filedialog.askopenfilename()
@@ -119,6 +132,16 @@ class Application(tk.Tk):
         entry.delete(0, tk.END)
         entry.insert(0, path)
         entry.xview_moveto(1)
+
+    def run_with_error_handling(self, func):
+        def wrapper():
+            try:
+                func()
+            except Exception as e:
+                error_trace = traceback.format_exc().strip().split("\n")[-1]
+                messagebox.showerror("Error", error_trace)
+
+        return wrapper
 
 
 if __name__ == "__main__":
