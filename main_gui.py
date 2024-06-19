@@ -5,8 +5,11 @@ from tkinter import filedialog, messagebox
 from dotenv import load_dotenv
 
 from toolbox_scripts.read.read_supply_data import SupplyDataReader
+
 from toolbox_scripts.reports.report_groups_dispoview import GroupsDispoview
 from toolbox_scripts.reports.report_alloaction_data import AllocationData
+from toolbox_scripts.reports.report_forecast_check import ForecastCheck
+
 from toolbox_scripts.other.sort_my_data import sort_my_data
 from toolbox_scripts.other.create_pos import create_csv_pos
 
@@ -54,13 +57,14 @@ class Application(tk.Tk):
             "All_dram_data": lambda path_name="all_dram_data": self.select_path(
                 path_name
             ),
+            "AR_data": lambda path_name="ar_data": self.select_path(path_name),
         }
         for index, (key, value) in enumerate(select_data.items()):
             bt = tk.Button(self, text=key, command=value, width=20)
             bt.grid(row=index + 1, column=0, padx=5, pady=5)
 
     def entry_widgets(self):
-        entries_list = ["dispoview_data", "supply_data", "all_dram_data"]
+        entries_list = ["dispoview_data", "supply_data", "all_dram_data", "ar_data"]
         for index, entry_name in enumerate(entries_list):
             entry = tk.Entry(self, name=entry_name, width=40)
             entry.grid(row=index + 1, column=1, padx=5, pady=5)
@@ -80,6 +84,11 @@ class Application(tk.Tk):
                     dispo_file_path=self.entries["dispoview_data"].get(),
                     groups_file_path=paths["PATH_DISPO_GROUPS"],
                 )()
+            ),
+            "Forecast_check": self.run_with_error_handling(
+                lambda: ForecastCheck(
+                    forecast_file_path=self.entries["ar_data"].get()
+                )(),
             ),
         }
         for index, (key, value) in enumerate(reports_data.items()):

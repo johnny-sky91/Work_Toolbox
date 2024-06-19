@@ -11,19 +11,14 @@ class SupplyDataReader:
         self.path_groups = path_groups
         self.data = None
         self.groups = None
-        self.supply_info = None
+        self.supply_confirmed = None
+        self.supply_requested = None
 
     def read_data(self):
-        try:
-            self.data = pd.read_excel(self.path_supply, sheet_name="SUPPLY")
-        except Exception as e:
-            print(f"Error loading data: {e}")
+        self.data = pd.read_excel(self.path_supply, sheet_name="SUPPLY")
 
     def read_groups(self):
-        try:
-            self.groups = pd.read_excel(self.path_groups, sheet_name="groups")
-        except Exception as e:
-            print(f"Error loading data: {e}")
+        self.groups = pd.read_excel(self.path_groups, sheet_name="groups")
 
     def prepare_data(self):
         self.data = self.data.iloc[1:, 4:]
@@ -46,32 +41,35 @@ class SupplyDataReader:
         date_columns = date_columns[date_columns.index(start_of_week) :]
         self.data = self.data[ready_columns + date_columns]
 
-    def filter_data(self):
-        self.data = pd.DataFrame(
+    def filter_data(self, filtered, searched):
+        filtered = pd.DataFrame(
             self.data[
-                (self.data["date"] == "supply: C")
+                (self.data["date"].str.contains(searched))
                 & (self.data["factory\n(destination)"] == "CZ")
             ]
         )
-        self.data.rename(columns={"Supplier": "SUPPLIER"}, inplace=True)
-        self.data.drop(columns=["date", "factory\n(destination)"], inplace=True)
-        self.data.fillna(0, inplace=True)
+        filtered.rename(columns={"Supplier": "SUPPLIER"}, inplace=True)
+        filtered.drop(columns=["date", "factory\n(destination)"], inplace=True)
+        filtered = filtered.fillna(0, inplace=False)
+        return filtered
 
-    def add_groups(self):
+    def add_groups(self, data):
         self.groups = self.groups[["COMPONENT", "GROUP"]].drop_duplicates()
         self.groups.reset_index(inplace=True, drop=True)
-        self.supply_info = pd.merge(self.data, self.groups, on="COMPONENT", how="inner")
-        self.supply_info.insert(1, "GROUP", self.supply_info.pop("GROUP"))
+        data = pd.merge(data, self.groups, on="COMPONENT", how="inner")
+        data.insert(1, "GROUP", data.pop("GROUP"))
+        return data
 
-    def melt_supply_data(self):
-        self.supply_info = self.supply_info.melt(
+    def melt_supply(self, data):
+        melted_data = data.melt(
             id_vars=["GROUP", "COMPONENT", "SUPPLIER"],
             var_name="ETD_DATE_WEEK",
             value_name="QTY",
         )
-        self.supply_info = self.supply_info.loc[self.supply_info["QTY"] != 0]
-        self.supply_info.reset_index(inplace=True, drop=True)
-        self.supply_info[["STATUS", "SHIPMENT_ID", "COMMENT"]] = None
+        melted_data = melted_data.loc[melted_data["QTY"] != 0]
+        melted_data.reset_index(inplace=True, drop=True)
+        melted_data[["STATUS", "SHIPMENT_ID", "COMMENT"]] = None
+        return melted_data
 
     def save_to_excel(self):
         current_datetime = datetime.datetime.now()
@@ -85,7 +83,12 @@ class SupplyDataReader:
 
         writer = pd.ExcelWriter(report_file_path)
 
-        self.supply_info.to_excel(writer, sheet_name=f"supply_confirmed", index=False)
+        self.supply_confirmed.to_excel(
+            writer, sheet_name=f"supply_confirmed", index=False
+        )
+        self.supply_requested.to_excel(
+            writer, sheet_name=f"supply_requested", index=False
+        )
 
         info_df = pd.DataFrame({"Source_file": [source_file]})
         info_df.to_excel(writer, sheet_name="INFO", index=False)
@@ -100,9 +103,20 @@ class SupplyDataReader:
         self.read_groups()
         self.prepare_data()
         self.select_data()
-        self.filter_data()
-        self.add_groups()
-        self.melt_supply_data()
+
+        self.supply_confirmed = self.filter_data(
+            filtered=self.supply_confirmed, searched=": C"
+        )
+        self.supply_requested = self.filter_data(
+            filtered=self.supply_requested, searched=":B"
+        )
+
+        self.supply_confirmed = self.add_groups(self.supply_confirmed)
+        self.supply_requested = self.add_groups(self.supply_requested)
+
+        self.supply_confirmed = self.melt_supply(self.supply_confirmed)
+        self.supply_requested = self.melt_supply(self.supply_requested)
+
         self.save_to_excel()
 
 

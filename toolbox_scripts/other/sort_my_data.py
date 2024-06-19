@@ -6,6 +6,8 @@ def sort_my_data(directory):
         "sap_log_data_": "Downloads\sap_dispoview",
         "Report_dispoview_groups_": "Results\Dispoview_groups",
         "EMS_forecast_": "Results\EMS_forecast",
+        "Report_forecast_check_": "Results\Forecast_check",
+        "AttachRatePlanning": "Downloads\AR_data",
     }
     files = os.listdir(directory)
     for file in files:
