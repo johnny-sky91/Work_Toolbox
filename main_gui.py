@@ -12,6 +12,7 @@ from toolbox_scripts.reports.report_forecast_check import ForecastCheck
 
 from toolbox_scripts.other.sort_my_data import sort_my_data
 from toolbox_scripts.other.create_pos import create_csv_pos
+from toolbox_scripts.other.datestamp import datestamp
 
 load_dotenv()
 
@@ -117,6 +118,7 @@ class Application(tk.Tk):
             "Sort_My_Data": self.run_with_error_handling(
                 lambda: sort_my_data(paths["PATH_MY_DATA"])
             ),
+            "SAP_datestamp": self.run_with_error_handling(lambda: datestamp()),
         }
         for index, (key, value) in enumerate(others_data.items()):
             bt = tk.Button(self, text=key, command=value, width=20)
