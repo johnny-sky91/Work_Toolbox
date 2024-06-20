@@ -32,7 +32,6 @@ class ForecastCheck:
         self.index_table = self.all_forecast[
             ["System", "System - status code"]
         ].drop_duplicates()
-        self.index_table.sort_values(by=["System"], inplace=True, ascending=False)
 
         self.index_table["System"] = self.index_table["System"].apply(
             lambda x: f'=HYPERLINK("#{x}!A1","{x}")'
@@ -45,7 +44,8 @@ class ForecastCheck:
         data = one_system[one_system["Measure"] == "Attach Rate As Is"].copy()
         actual_pos = data.columns.get_loc(self.current_fy_month)
 
-        current_ar = data[["SOI", self.current_fy_month]].copy()
+        current_ar = one_system[["SOI", "Measure", self.current_fy_month]].copy()
+        current_ar = current_ar.loc[current_ar["Measure"] == "Attach Rate Override"]
         current_ar.rename(columns={self.current_fy_month: "Actual_AR"}, inplace=True)
 
         selected_months_6 = data.columns[(actual_pos - 6) : actual_pos]
@@ -76,10 +76,8 @@ class ForecastCheck:
             "Mode_6_mth",
         ]
         data = data[new_column_order]
-        sheet = "Systems"
-        data.rename(
-            columns={"SOI": f'=HYPERLINK("#{sheet}!A1", "{sheet}")'}, inplace=True
-        )
+        data.sort_values(by=["SOI"], inplace=True)
+        data.rename(columns={"SOI": f'=HYPERLINK("#Systems!A1", "SOI")'}, inplace=True)
         return data
 
     def _current_fy_month(self):
@@ -91,6 +89,8 @@ class ForecastCheck:
     def _save_to_excel(self):
         now = datetime.datetime.now()
         filename = f"Report_forecast_check_{now.strftime('%d%m%Y_%H%M')}.xlsx"
+        # filename = f"Report_forecast_check_TEST.xlsx"
+
         directory_path = os.path.dirname(self.forecast_file_path)
         report_file_path = os.path.join(directory_path, filename)
 
