@@ -4,11 +4,11 @@ import os, shutil
 def sort_my_data(directory):
     dir_mapping = {
         "sap_log_data_": "Downloads\sap_dispoview",
-        "Report_dispoview_groups_": "Results\Dispoview_groups",
+        "Report_groups__dispoview_": "Results\Groups_dispoview",
         "EMS_forecast_": "Results\EMS_forecast",
         "Report_forecast_check_": "Results\Forecast_check",
         "AttachRatePlanning": "Downloads\AR_data",
-        "Report_groups_overview_": "Overview_groups",
+        "Report_groups_overview_": "Results\Groups_overview",
     }
     files = os.listdir(directory)
     for file in files:
