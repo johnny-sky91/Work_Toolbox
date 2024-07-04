@@ -89,10 +89,14 @@ class GroupsDispoview:
             stock = f"E{row_index}"
             supply_column = f"F$1"
             data_column = f"All_data!F:F"
+
         net_forecast = f'_xlfn.SUMIFS({data_column},All_data!$B:$B,$A{row_index},All_data!$D:$D,"NetForecast")'
-        cust_orders = f'_xlfn.SUMIFS({data_column},All_data!$B:$B,$A{row_index},All_data!$D:$D,"CustOrders")'
+
+        cust_cdd_orders = f'_xlfn.SUMIFS({data_column},All_data!$B:$B,$A{row_index},All_data!$D:$D,"CustOrders CDD")'
+        cust_rdd_orders = f'_xlfn.SUMIFS({data_column},All_data!$B:$B,$A{row_index},All_data!$D:$D,"CustOrders RDD")'
 
         supply_status = None
+
         if row["DATA"] in ["Forecast_confirmed", "Forecast_requested"]:
             supply_status = (
                 f"Supply_confirmed"
@@ -100,11 +104,15 @@ class GroupsDispoview:
                 else f"Supply_requested"
             )
             supply = f"_xlfn.SUMIFS({supply_status}!$E:$E,{supply_status}!$A:$A,$A{row_index},{supply_status}!$D:$D,{supply_column})"
-            return f"={stock}+{supply}-({net_forecast}+{cust_orders})"
+            return f"={stock}+{supply}-({net_forecast}+{cust_cdd_orders})"
 
-        elif row["DATA"] == "Orders_confirmed":
+        elif row["DATA"] == "Orders_CDD_confirmed":
             supply = f"_xlfn.SUMIFS(Supply_confirmed!$E:$E,Supply_confirmed!$A:$A,$A{row_index},Supply_confirmed!$D:$D,{supply_column})"
-            return f"={stock}+{supply}-{cust_orders}"
+            return f"={stock}+{supply}-{cust_cdd_orders}"
+
+        elif row["DATA"] == "Orders_RDD_confirmed":
+            supply = f"_xlfn.SUMIFS(Supply_confirmed!$E:$E,Supply_confirmed!$A:$A,$A{row_index},Supply_confirmed!$D:$D,{supply_column})"
+            return f"={stock}+{supply}-{cust_rdd_orders}"
 
         return None
 
@@ -120,8 +128,11 @@ class GroupsDispoview:
         forecast_confirmed = groups_descriptions.copy()
         forecast_confirmed["DATA"] = "Forecast_confirmed"
 
-        orders_confirmed = groups_descriptions.copy()
-        orders_confirmed["DATA"] = "Orders_confirmed"
+        orders_cdd_confirmed = groups_descriptions.copy()
+        orders_cdd_confirmed["DATA"] = "Orders_CDD_confirmed"
+
+        orders_rdd_confirmed = groups_descriptions.copy()
+        orders_rdd_confirmed["DATA"] = "Orders_RDD_confirmed"
 
         forecast_requested = groups_descriptions.copy()
         forecast_requested["DATA"] = "Forecast_requested"
@@ -135,7 +146,8 @@ class GroupsDispoview:
                 forecast_confirmed,
                 forecast_requested,
                 healthy_stock_forecast,
-                orders_confirmed,
+                orders_cdd_confirmed,
+                orders_rdd_confirmed,
             ],
             ignore_index=True,
         )
@@ -161,7 +173,7 @@ class GroupsDispoview:
 
     def _save_to_excel(self):
         now = datetime.datetime.now()
-        filename = f"Report_dispoview_groups_{now.strftime('%d%m%Y_%H%M')}.xlsx"
+        filename = f"Report_groups_dispoview_{now.strftime('%d%m%Y_%H%M')}.xlsx"
         directory_path = os.path.dirname(self.dispo_file_path)
         report_file_path = os.path.join(directory_path, filename)
 

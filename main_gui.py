@@ -9,6 +9,7 @@ from toolbox_scripts.read.read_supply_data import SupplyDataReader
 from toolbox_scripts.reports.report_groups_dispoview import GroupsDispoview
 from toolbox_scripts.reports.report_alloaction_data import AllocationData
 from toolbox_scripts.reports.report_forecast_check import ForecastCheck
+from toolbox_scripts.reports.report_groups_overview import GroupsOverview
 
 from toolbox_scripts.other.sort_my_data import sort_my_data
 from toolbox_scripts.other.create_pos import create_csv_pos
@@ -73,10 +74,17 @@ class Application(tk.Tk):
 
     def reports_widgets(self):
         reports_data = {
-            "Dispoview_groups": self.run_with_error_handling(
+            "Groups_balances": self.run_with_error_handling(
                 lambda: GroupsDispoview(
                     dispo_file_path=self.entries["dispoview_data"].get(),
                     groups_file_path=paths["PATH_DISPO_GROUPS"],
+                    supply_file_path=self.entries["supply_data"].get(),
+                )()
+            ),
+            "Groups_overview": self.run_with_error_handling(
+                lambda: GroupsOverview(
+                    groups_file_path=paths["PATH_DISPO_GROUPS"],
+                    dispo_file_path=self.entries["dispoview_data"].get(),
                     supply_file_path=self.entries["supply_data"].get(),
                 )()
             ),
@@ -112,7 +120,7 @@ class Application(tk.Tk):
             "New_supply_info": self.run_with_error_handling(
                 lambda: SupplyDataReader(
                     path_supply=self.entries["all_dram_data"].get(),
-                    path_groups=paths["PATH_GROUPS"],
+                    path_groups=paths["PATH_DISPO_GROUPS"],
                 )()
             ),
             "Sort_My_Data": self.run_with_error_handling(

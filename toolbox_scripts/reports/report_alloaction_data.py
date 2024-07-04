@@ -43,7 +43,7 @@ class AllocationData:
 
     def _create_forecast(self):
         self.selected_data = self.raw_dispoview.loc[
-            self.raw_dispoview["DATA"].isin(["NetForecast", "CustOrders"])
+            self.raw_dispoview["DATA"].isin(["NetForecast", "CustOrders CDD"])
         ]
         self.selected_data = self.selected_data.drop(
             columns=["DATA", "CODENUMBER", "GROUP"]
