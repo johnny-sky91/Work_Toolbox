@@ -188,7 +188,6 @@ class GroupsDispoview:
     def _save_to_excel(self):
         now = datetime.datetime.now()
         filename = f"Report_groups_dispoview_{now.strftime('%d%m%Y_%H%M')}.xlsx"
-        filename = f"TEST_Report_groups_dispoview_{now.strftime('%d%m%Y_%H%M')}.xlsx"
 
         directory_path = os.path.dirname(self.dispo_file_path)
         report_file_path = os.path.join(directory_path, filename)
