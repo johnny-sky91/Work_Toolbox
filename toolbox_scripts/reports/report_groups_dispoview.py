@@ -78,16 +78,21 @@ class GroupsDispoview:
         )
         self.weeks = list(self.all_merged_data.columns[4:])
 
+    def _check_negative(self, row):
+        row_index = row.name + 2
+        check_negative = f"=_xlfn.IF((MIN(F{row_index}:X{row_index})<0),TRUE,FALSE)"
+        return check_negative
+
     def _formula_column(self, row, first: bool):
         row_index = row.name + 2
 
         if first:
             stock = f'_xlfn.SUMIFS(All_data!E:E,All_data!$B:$B,$A{row_index},All_data!$D:$D,"Stock")'
-            supply_column = f"E$1"
+            supply_column = f"F$1"
             data_column = f"All_data!E:E"
         else:
-            stock = f"E{row_index}"
-            supply_column = f"F$1"
+            stock = f"F{row_index}"
+            supply_column = f"G$1"
             data_column = f"All_data!F:F"
 
         net_forecast = f'_xlfn.SUMIFS({data_column},All_data!$B:$B,$A{row_index},All_data!$D:$D,"NetForecast")'
@@ -117,7 +122,13 @@ class GroupsDispoview:
         return None
 
     def _create_groups_balances(self):
-        main_headers = ["GROUP", "GROUP_DESCRIPTION", "DATA", "COMMENTS"] + self.weeks
+        main_headers = [
+            "GROUP",
+            "GROUP_DESCRIPTION",
+            "DATA",
+            "COMMENTS",
+            "NEGATIVE_BALANCE",
+        ] + self.weeks
         groups_descriptions = (
             self.ready_groups[["GROUP", "GROUP_DESCRIPTION"]]
             .drop_duplicates()
@@ -152,9 +163,12 @@ class GroupsDispoview:
             ignore_index=True,
         )
         self.groups_balances.iloc[:, 4] = self.groups_balances.apply(
-            lambda row: self._formula_column(row, True), axis=1
+            lambda row: self._check_negative(row), axis=1
         )
         self.groups_balances.iloc[:, 5] = self.groups_balances.apply(
+            lambda row: self._formula_column(row, True), axis=1
+        )
+        self.groups_balances.iloc[:, 6] = self.groups_balances.apply(
             lambda row: self._formula_column(row, False), axis=1
         )
 
@@ -174,6 +188,8 @@ class GroupsDispoview:
     def _save_to_excel(self):
         now = datetime.datetime.now()
         filename = f"Report_groups_dispoview_{now.strftime('%d%m%Y_%H%M')}.xlsx"
+        filename = f"TEST_Report_groups_dispoview_{now.strftime('%d%m%Y_%H%M')}.xlsx"
+
         directory_path = os.path.dirname(self.dispo_file_path)
         report_file_path = os.path.join(directory_path, filename)
 
