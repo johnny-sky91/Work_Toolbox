@@ -10,6 +10,7 @@ from toolbox_scripts.reports.report_groups_dispoview import GroupsDispoview
 from toolbox_scripts.reports.report_alloaction_data import AllocationData
 from toolbox_scripts.reports.report_forecast_check import ForecastCheck
 from toolbox_scripts.reports.report_groups_overview import GroupsOverview
+from toolbox_scripts.reports.report_dos_calculation import DosCalculation
 
 from toolbox_scripts.other.sort_my_data import sort_my_data
 from toolbox_scripts.other.create_pos import create_csv_pos
@@ -97,6 +98,12 @@ class Application(tk.Tk):
             "Forecast_check": self.run_with_error_handling(
                 lambda: ForecastCheck(
                     forecast_file_path=self.entries["ar_data"].get()
+                )(),
+            ),
+            "DoS_calculation": self.run_with_error_handling(
+                lambda: DosCalculation(
+                    forecast_file_path=self.entries["ar_data"].get(),
+                    groups_file_path=paths["PATH_DISPO_GROUPS"],
                 )(),
             ),
         }
