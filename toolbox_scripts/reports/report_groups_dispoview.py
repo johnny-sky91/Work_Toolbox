@@ -109,7 +109,7 @@ class GroupsDispoview:
                 else f"Supply_requested"
             )
             supply = f"_xlfn.SUMIFS({supply_status}!$E:$E,{supply_status}!$A:$A,$A{row_index},{supply_status}!$D:$D,{supply_column})"
-            return f"={stock}+{supply}-({net_forecast}+{cust_cdd_orders})"
+            return f"={stock}+{supply}-({net_forecast}+{cust_rdd_orders})"
 
         elif row["DATA"] == "Orders_CDD_confirmed":
             supply = f"_xlfn.SUMIFS(Supply_confirmed!$E:$E,Supply_confirmed!$A:$A,$A{row_index},Supply_confirmed!$D:$D,{supply_column})"
