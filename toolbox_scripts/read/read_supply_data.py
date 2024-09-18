@@ -50,7 +50,7 @@ class SupplyDataReader:
         )
         filtered.rename(columns={"Supplier": "SUPPLIER"}, inplace=True)
         filtered.drop(columns=["date", "factory\n(destination)"], inplace=True)
-        filtered = filtered.fillna(0, inplace=False)
+        filtered.infer_objects(copy=False).fillna(0)
         return filtered
 
     def add_groups(self, data):
