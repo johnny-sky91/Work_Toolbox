@@ -1,6 +1,5 @@
 import os, pyperclip, traceback
 import tkinter as tk
-
 from tkinter import filedialog, messagebox
 from dotenv import load_dotenv
 
