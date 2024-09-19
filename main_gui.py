@@ -3,13 +3,13 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from dotenv import load_dotenv
 
-from toolbox_scripts.read.read_supply_data import SupplyDataReader
+from toolbox_scripts.read.supply_data import SupplyDataReader
 
-from toolbox_scripts.reports.report_groups_dispoview import GroupsDispoview
-from toolbox_scripts.reports.report_alloaction_data import AllocationData
-from toolbox_scripts.reports.report_forecast_check import ForecastCheck
-from toolbox_scripts.reports.report_groups_overview import GroupsOverview
-from toolbox_scripts.reports.report_dos_calculation import DosCalculation
+from toolbox_scripts.reports.groups_dispoview import GroupsDispoview
+from toolbox_scripts.reports.alloaction_data import AllocationData
+from toolbox_scripts.reports.forecast_check import ForecastCheck
+from toolbox_scripts.reports.groups_overview import GroupsOverview
+from toolbox_scripts.reports.dos_calculation import DosCalculation
 
 from toolbox_scripts.other.sort_my_data import sort_my_data
 from toolbox_scripts.other.create_pos import create_csv_pos

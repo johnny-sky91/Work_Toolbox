@@ -1,6 +1,6 @@
 import os, datetime
 import pandas as pd
-from toolbox_scripts.read.read_forecast_data import ForecastDataReader
+from toolbox_scripts.read.forecast_data import ForecastDataReader
 
 
 class ForecastCheck:

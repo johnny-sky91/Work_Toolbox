@@ -2,7 +2,7 @@ import os, datetime
 
 import pandas as pd
 
-from toolbox_scripts.read.read_dispoview_data import DispoviewDataReader
+from toolbox_scripts.read.dispoview_data import DispoviewDataReader
 
 
 class GroupsOverview:

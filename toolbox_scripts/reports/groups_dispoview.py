@@ -5,7 +5,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import CellIsRule
-from toolbox_scripts.read.read_dispoview_data import DispoviewDataReader
+from toolbox_scripts.read.dispoview_data import DispoviewDataReader
 
 
 class GroupsDispoview:

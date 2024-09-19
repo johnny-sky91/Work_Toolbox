@@ -1,7 +1,7 @@
 import pandas as pd
 import os, datetime
 
-from toolbox_scripts.read.read_dispoview_data import DispoviewDataReader
+from toolbox_scripts.read.dispoview_data import DispoviewDataReader
 
 
 class AllocationData:
