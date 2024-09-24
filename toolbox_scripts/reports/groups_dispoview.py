@@ -34,6 +34,8 @@ class GroupsDispoview:
         self.groups_balances = None
         self.weeks = None
 
+        self.sap_supply = None
+
     def _read_dispoview(self):
         dispoview = DispoviewDataReader(dispo_file_path=self.dispo_file_path)
         dispoview()
@@ -172,6 +174,16 @@ class GroupsDispoview:
             lambda row: self._formula_column(row, False), axis=1
         )
 
+    def _get_sap_supply(self):
+        self.sap_supply = self.all_merged_data.copy()
+        self.sap_supply = self.sap_supply.melt(
+            id_vars=["CODENUMBER", "GROUP", "GROUP_DESCRIPTION", "DATA"],
+            var_name="ETA_DATE_WEEK",
+            value_name="QTY",
+        )
+        self.sap_supply = self.sap_supply.loc[self.sap_supply["DATA"] == "Supply LP"]
+        self.sap_supply = self.sap_supply.loc[self.sap_supply["QTY"] != 0]
+
     def _apply_excel_formatting(self, final_file_path):
         redFill = PatternFill(
             start_color="FF7276", end_color="FF7276", fill_type="solid"
@@ -196,6 +208,7 @@ class GroupsDispoview:
         self.groups_balances.to_excel(
             writer, sheet_name=f"Groups_balances", index=False
         )
+        self.sap_supply.to_excel(writer, sheet_name=f"SAP_supply", index=False)
         self.all_merged_data.to_excel(writer, sheet_name=f"All_data", index=False)
         self.supply_confirmed.to_excel(
             writer, sheet_name=f"Supply_confirmed", index=False
@@ -214,4 +227,5 @@ class GroupsDispoview:
         self._read_supply()
         self._mergre_groups_dispoview()
         self._create_groups_balances()
+        self._get_sap_supply()
         self._save_to_excel()
