@@ -67,8 +67,11 @@ class SupplyDataReader:
             value_name="QTY",
         )
         melted_data = melted_data.loc[melted_data["QTY"] != 0]
+        melted_data = melted_data.dropna(subset=["QTY"])
         melted_data.reset_index(inplace=True, drop=True)
-        melted_data[["STATUS", "SHIPMENT_ID", "COMMENT"]] = None
+        melted_data[["STATUS", "SHIPMENT_ID", "COMMENT", "ETA_DATE_WEEK", "IN_SAP"]] = (
+            None
+        )
         return melted_data
 
     def save_to_excel(self):
@@ -124,13 +127,26 @@ def add_dropdown_statuses(excel_filename: str, sheet_name: str):
     workbook = openpyxl.load_workbook(excel_filename)
     sheet = workbook[sheet_name]
 
-    choices = ["Shipped", "Open_WH", "Delivered", "Other"]
-    choices_ready = '"' + ",".join(choices) + '"'
+    status = ["Shipped", "Open_WH", "Delivered", "Other"]
+    status_ready = '"' + ",".join(status) + '"'
 
-    data_val = DataValidation(type="list", formula1=choices_ready, allow_blank=True)
+    status_validation = DataValidation(
+        type="list", formula1=status_ready, allow_blank=True
+    )
 
-    sheet.add_data_validation(data_val)
-    data_val_range = "F2:F" + str(sheet.max_row)
-    data_val.add(data_val_range)
+    sheet.add_data_validation(status_validation)
+    status_validation_range = "F2:F" + str(sheet.max_row)
+    status_validation.add(status_validation_range)
+
+    in_sap = ["True", "False"]
+    in_sap_ready = '"' + ",".join(in_sap) + '"'
+
+    in_sap_validation = DataValidation(
+        type="list", formula1=in_sap_ready, allow_blank=True
+    )
+
+    sheet.add_data_validation(in_sap_validation)
+    in_sap_validation_range = "J2:J" + str(sheet.max_row)
+    in_sap_validation.add(in_sap_validation_range)
 
     workbook.save(excel_filename)
